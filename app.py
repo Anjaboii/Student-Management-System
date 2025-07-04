@@ -9,7 +9,7 @@ from student_model import (
 )
 
 app = Flask(__name__)
-CORS(app, origins=['*'])
+CORS(app, origins=['https://studentmanagement-1.netlify.app/'])
 
 @app.route('/')
 def home():
