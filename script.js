@@ -72,7 +72,9 @@
 
             const studentsHTML = students.map(student => `
                 <div class="student-card">
+                
                     <div class="student-name">${student.name}</div>
+                    <strong>ID:</strong> ${student.id}<br>
                     <div class="student-info">
                         <strong>Age:</strong> ${student.age} years<br>
                         <strong>Grade:</strong> ${student.grade}
