@@ -3,7 +3,7 @@ from db import get_connection
 def get_all_students():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM students")  # Make sure table exists
+    cursor.execute("SELECT * FROM students") 
     students = cursor.fetchall()
     conn.close()
     return students

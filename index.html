@@ -41,8 +41,18 @@
         <div class="students-section">
             <div class="students-header">
                 <h2>Students List</h2>
-                <button class="btn btn-success" onclick="loadStudents()">Refresh List</button>
+                <div class="header-actions">
+                    <!-- NEW: Search Bar -->
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search students " class="search-input">
+                        <button class="btn btn-search" onclick="clearSearch()">Clear</button>
+                    </div>
+                    <button class="btn btn-success" onclick="loadStudents()">Refresh List</button>
+                </div>
             </div>
+            <!-- NEW: Search Results Info -->
+            <div id="searchInfo" class="search-info"></div>
+            
             <div id="studentsContainer">
                 <div class="loading">Loading students...</div>
             </div>
