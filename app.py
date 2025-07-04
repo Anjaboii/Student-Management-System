@@ -9,7 +9,7 @@ from student_model import (
 )
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['*'])
 
 @app.route('/')
 def home():

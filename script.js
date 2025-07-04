@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://studentmanagement-1.up.railway.app';
 let editingStudentId = null;
 let searchTimeout = null;
 
