@@ -3,11 +3,15 @@ from mysql.connector import Error
 
 # Database configuration
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'students'
-}
+            'host': os.environ.get('MYSQLHOST'),
+            'port': int(os.environ.get('MYSQLPORT', 3306)),
+            'database': os.environ.get('MYSQLDATABASE'),
+            'user': os.environ.get('MYSQLUSER'),
+            'password': os.environ.get('MYSQLPASSWORD'),
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            'autocommit': True
+        }
 
 def get_connection():
     try:
