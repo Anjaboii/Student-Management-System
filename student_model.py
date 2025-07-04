@@ -42,3 +42,5 @@ def delete_student(student_id):
     conn.close()
     return {"message": "Student deleted successfully"}
 
+
+
