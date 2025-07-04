@@ -1,6 +1,12 @@
 from flask import Flask, request, jsonify
-from student_model import get_all_students, add_student
 from flask_cors import CORS
+from student_model import (
+    get_all_students,
+    add_student,
+    get_student_by_id,
+    update_student,
+    delete_student
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +24,19 @@ def create_student():
     data = request.get_json()
     add_student(data)
     return jsonify({"message": "Student added successfully"}), 201
+
+@app.route('/students/<int:student_id>', methods=['GET'])
+def get_student(student_id):
+    return jsonify(get_student_by_id(student_id))
+
+@app.route('/students/<int:student_id>', methods=['PUT'])
+def update(student_id):
+    data = request.json
+    return jsonify(update_student(student_id, data['name'], data['age'], data['grade']))
+
+@app.route('/students/<int:student_id>', methods=['DELETE'])
+def delete(student_id):
+    return jsonify(delete_student(student_id))
 
 if __name__ == '__main__':
     app.run(debug=True)
