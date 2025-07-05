@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://studentmanagement-1.up.railway.app';
+const API_BASE_URL = 'https://studentmanagement-1.up.railway.app/students';
 let editingStudentId = null;
 let searchTimeout = null;
 
