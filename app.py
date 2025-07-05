@@ -12,7 +12,7 @@ from student_model import (
 app = Flask(__name__)
 
 # Allow CORS from your frontend domain (change URL accordingly)
-CORS(app, resources={r"/api/*": {"origins": "https://studentmanagement-1.netlify.app"}})
+CORS(app, origins=['https://studentmanagement-1.netlify.app'])
 
 @app.route('/')
 def home():

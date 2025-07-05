@@ -1,4 +1,5 @@
-const API_BASE_URL = 'https://studentmanagement-1.up.railway.app/students';
+// FIXED: Correct API base URL - removed the extra /students
+const API_BASE_URL = 'https://studentmanagement-1.up.railway.app/api';
 let editingStudentId = null;
 let searchTimeout = null;
 
