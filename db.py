@@ -1,6 +1,18 @@
 import os
+from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import Error
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Debug: Print environment variables
+print("🔍 Environment Variables:")
+print(f"MYSQLHOST: {os.environ.get('MYSQLHOST')}")
+print(f"MYSQLPORT: {os.environ.get('MYSQLPORT')}")
+print(f"MYSQLDATABASE: {os.environ.get('MYSQLDATABASE')}")
+print(f"MYSQLUSER: {os.environ.get('MYSQLUSER')}")
+print(f"MYSQLPASSWORD: {os.environ.get('MYSQLPASSWORD')}")
 
 # Railway DB config using environment variables
 DB_CONFIG = {
@@ -17,11 +29,18 @@ DB_CONFIG = {
 # Get database connection
 def get_connection():
     try:
+        print("🔗 Attempting database connection...")
+        print(f"Host: {DB_CONFIG['host']}")
+        print(f"Database: {DB_CONFIG['database']}")
+        print(f"User: {DB_CONFIG['user']}")
+        
         connection = mysql.connector.connect(**DB_CONFIG)
         if connection.is_connected():
+            print("✅ Successfully connected to MySQL database")
             return connection
         raise Exception("Failed to connect to database")
     except Error as e:
+        print(f"❌ Database connection error: {e}")
         raise Exception(f"Database connection error: {e}")
 
 # Create the students table if not exists
