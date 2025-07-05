@@ -12,7 +12,7 @@ from student_model import (
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'f40f9a50df41e080ee1cc6b08c9e9842c038ddd8f391281d86d762fff87c21a1')
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "https://studentmanagement-1.netlify.app"}})
 
 @app.route('/')
 def index():

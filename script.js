@@ -1,5 +1,6 @@
 // Use your local Flask backend URL here
-const API_BASE_URL = 'https://studentmanagement-1.up.railway.app';
+const API_BASE_URL = 'https://studentmanagement-1.up.railway.app/api';
+
 let editingStudentId = null;
 let searchTimeout = null;
 
