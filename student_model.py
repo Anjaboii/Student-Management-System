@@ -1,14 +1,13 @@
 from db import execute_query
 
 def get_all_students():
-    query = "SELECT * FROM students ORDER BY id ASC"
+    query = "SELECT * FROM students"
     return execute_query(query, fetch=True)
 
 def add_student(student_data):
     query = "INSERT INTO students (name, age, grade) VALUES (%s, %s, %s)"
     params = (student_data['name'], student_data['age'], student_data['grade'])
     rowcount = execute_query(query, params)
-    # No direct lastrowid here, could modify execute_query to return it if needed
     return rowcount
 
 def get_student_by_id(student_id):

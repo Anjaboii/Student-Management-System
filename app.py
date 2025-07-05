@@ -1,32 +1,21 @@
-from flask import Flask, jsonify, request, send_from_directory
+import os
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from student_model import (
-    get_all_students, add_student, get_student_by_id,
-    update_student, delete_student
+    get_all_students,
+    get_student_by_id,
+    add_student,
+    update_student,
+    delete_student
 )
-import os
 
-app = Flask(__name__, static_folder='')  # Serve static files from project root
-app.secret_key = 'your-secret-key'
-
-# Enable CORS for API routes
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Serve frontend files from root folder
-
 @app.route('/')
-def serve_index():
-    return send_from_directory('', 'index.html')
-
-@app.route('/script.js')
-def serve_script():
-    return send_from_directory('', 'script.js')
-
-@app.route('/style.css')
-def serve_style():
-    return send_from_directory('', 'style.css')
-
-# --- API routes ---
+def index():
+    return "Welcome to the Student Management System API"
 
 @app.route('/api/students', methods=['GET'])
 def api_get_students():
@@ -36,48 +25,57 @@ def api_get_students():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/students', methods=['POST'])
-def api_add_student():
-    data = request.get_json()
-    if not data or not all(k in data for k in ('name', 'age', 'grade')):
-        return jsonify({'error': 'Missing required fields'}), 400
+@app.route('/api/students/<int:student_id>', methods=['GET'])
+def api_get_student(student_id):
     try:
-        student_id = add_student(data)
-        return jsonify({'message': 'Student added', 'student_id': student_id}), 201
+        student = get_student_by_id(student_id)
+        if student:
+            return jsonify(student)
+        return jsonify({'error': 'Student not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/students/<int:student_id>', methods=['GET'])
-def api_get_student(student_id):
-    student = get_student_by_id(student_id)
-    if not student:
-        return jsonify({'error': 'Student not found'}), 404
-    return jsonify(student)
+@app.route('/api/students', methods=['POST'])
+def api_add_student():
+    try:
+        data = request.get_json()
+        if not data or not all(k in data for k in ('name', 'age', 'grade')):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        rowcount = add_student(data)
+        if rowcount:
+            return jsonify({'message': 'Student added successfully'}), 201
+        else:
+            return jsonify({'error': 'Failed to add student'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/students/<int:student_id>', methods=['PUT'])
 def api_update_student(student_id):
-    student = get_student_by_id(student_id)
-    if not student:
-        return jsonify({'error': 'Student not found'}), 404
-    data = request.get_json()
-    if not data or not all(k in data for k in ('name', 'age', 'grade')):
-        return jsonify({'error': 'Missing required fields'}), 400
     try:
-        update_student(student_id, data['name'], data['age'], data['grade'])
-        return jsonify({'message': 'Student updated'})
+        data = request.get_json()
+        if not data or not all(k in data for k in ('name', 'age', 'grade')):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        rowcount = update_student(student_id, data['name'], data['age'], data['grade'])
+        if rowcount:
+            return jsonify({'message': 'Student updated successfully'})
+        else:
+            return jsonify({'error': 'Student not found or no change'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/students/<int:student_id>', methods=['DELETE'])
 def api_delete_student(student_id):
-    student = get_student_by_id(student_id)
-    if not student:
-        return jsonify({'error': 'Student not found'}), 404
     try:
-        delete_student(student_id)
-        return jsonify({'message': 'Student deleted'})
+        rowcount = delete_student(student_id)
+        if rowcount:
+            return jsonify({'message': 'Student deleted successfully'})
+        else:
+            return jsonify({'error': 'Student not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
