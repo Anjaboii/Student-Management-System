@@ -11,8 +11,27 @@ from student_model import (
 
 app = Flask(__name__)
 
-# Allow CORS from your frontend domain (change URL accordingly)
-CORS(app, origins=['https://studentmanagement-1.netlify.app'])
+# Comprehensive CORS configuration
+CORS(app, 
+     origins=[
+         'https://studentmanagement-1.netlify.app',  # Your Netlify domain
+         'http://localhost:3000',                     # Local development
+         'http://127.0.0.1:5500',                    # Live Server
+         'http://localhost:5500'                     # Alternative Live Server port
+     ],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+     allow_headers=['Content-Type', 'Authorization'],
+     supports_credentials=True)
+
+# Handle preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "https://studentmanagement-1.netlify.app")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
 
 @app.route('/')
 def home():
