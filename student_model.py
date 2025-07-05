@@ -8,7 +8,7 @@ def add_student(student_data):
     query = "INSERT INTO students (name, age, grade) VALUES (%s, %s, %s)"
     params = (student_data['name'], student_data['age'], student_data['grade'])
     rowcount = execute_query(query, params)
-    # Optionally, get inserted id - requires changes to execute_query to return lastrowid
+    # No direct lastrowid here, could modify execute_query to return it if needed
     return rowcount
 
 def get_student_by_id(student_id):

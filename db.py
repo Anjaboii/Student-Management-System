@@ -68,6 +68,8 @@ connection_pool = None
 
 def init_connection_pool():
     global connection_pool
+    if connection_pool:
+        return True  # already initialized
     try:
         config = get_db_config()
         print(f"🔗 Initializing connection pool to {config['host']}:{config['port']}")
@@ -122,3 +124,6 @@ def execute_query(query, params=None, fetch=False):
             cursor.close()
         if connection:
             connection.close()
+
+# Initialize connection pool at import
+init_connection_pool()
