@@ -5,6 +5,7 @@ def get_all_students():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM students") 
     students = cursor.fetchall()
+    cursor.close()
     conn.close()
     return students
 
@@ -14,14 +15,15 @@ def add_student(data):
     sql = "INSERT INTO students (name, age, grade) VALUES (%s, %s, %s)"
     cursor.execute(sql, (data['name'], data['age'], data['grade']))
     conn.commit()
+    cursor.close()
     conn.close()
-
 
 def get_student_by_id(student_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM students WHERE id = %s", (student_id,))
     result = cursor.fetchone()
+    cursor.close()
     conn.close()
     return result
 
@@ -31,6 +33,7 @@ def update_student(student_id, name, age, grade):
     cursor.execute("UPDATE students SET name=%s, age=%s, grade=%s WHERE id=%s",
                    (name, age, grade, student_id))
     conn.commit()
+    cursor.close()
     conn.close()
     return {"message": "Student updated successfully"}
 
@@ -39,8 +42,6 @@ def delete_student(student_id):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM students WHERE id=%s", (student_id,))
     conn.commit()
+    cursor.close()
     conn.close()
     return {"message": "Student deleted successfully"}
-
-
-

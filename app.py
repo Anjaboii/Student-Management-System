@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
 from student_model import (
     get_all_students,
     add_student,
@@ -10,59 +11,54 @@ from student_model import (
 
 app = Flask(__name__)
 
-# ✅ Apply CORS only to /api/* routes, allowing Netlify frontend
+# Allow CORS from your frontend domain (change URL accordingly)
 CORS(app, resources={r"/api/*": {"origins": "https://studentmanagement-1.netlify.app"}})
 
 @app.route('/')
 def home():
     return "🎓 Student Management API is running!"
 
-# ✅ GET all students
 @app.route('/api/students', methods=['GET'])
 def fetch_students():
     return jsonify(get_all_students())
 
-# ✅ POST new student
 @app.route('/api/students', methods=['POST'])
 def create_student():
     data = request.get_json()
     add_student(data)
     return jsonify({"message": "Student added successfully"}), 201
 
-# ✅ GET student by ID
 @app.route('/api/students/<int:student_id>', methods=['GET'])
 def get_student(student_id):
-    return jsonify(get_student_by_id(student_id))
+    student = get_student_by_id(student_id)
+    if student:
+        return jsonify(student)
+    return jsonify({"error": "Student not found"}), 404
 
-# ✅ PUT update student
 @app.route('/api/students/<int:student_id>', methods=['PUT'])
 def update(student_id):
     data = request.json
-    return jsonify(update_student(student_id, data['name'], data['age'], data['grade']))
+    result = update_student(student_id, data['name'], data['age'], data['grade'])
+    return jsonify(result)
 
-# ✅ DELETE student
 @app.route('/api/students/<int:student_id>', methods=['DELETE'])
 def delete(student_id):
-    return jsonify(delete_student(student_id))
+    result = delete_student(student_id)
+    return jsonify(result)
 
-# ✅ Search students by name, age, grade, or ID
 @app.route('/api/students/search', methods=['GET'])
 def search_students():
     query = request.args.get('q', '').strip()
-    
     if not query:
         return jsonify({'error': 'Search query is required'}), 400
-    
     all_students = get_all_students()
-    matching_students = []
-    
-    for student in all_students:
-        if (query.lower() in str(student.get('name', '')).lower() or 
-            query.lower() in str(student.get('age', '')).lower() or 
-            query.lower() in str(student.get('grade', '')).lower() or
-            query in str(student.get('id', ''))):
-            matching_students.append(student)
-    
+    matching_students = [
+        s for s in all_students if
+        query.lower() in str(s.get('name', '')).lower() or
+        query.lower() in str(s.get('age', '')).lower() or
+        query.lower() in str(s.get('grade', '')).lower() or
+        query in str(s.get('id', ''))
+    ]
     return jsonify({
         'students': matching_students,
         'total': len(matching_students),

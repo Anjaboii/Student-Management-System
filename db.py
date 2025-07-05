@@ -2,7 +2,7 @@ import os
 import mysql.connector
 from mysql.connector import Error
 
-# Database configuration
+# Railway DB config using environment variables
 DB_CONFIG = {
     'host': os.environ.get('MYSQLHOST'),
     'port': int(os.environ.get('MYSQLPORT', 3306)),
@@ -14,6 +14,7 @@ DB_CONFIG = {
     'autocommit': True
 }
 
+# Get database connection
 def get_connection():
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
@@ -22,7 +23,8 @@ def get_connection():
         raise Exception("Failed to connect to database")
     except Error as e:
         raise Exception(f"Database connection error: {e}")
-        
+
+# Create the students table if not exists
 def create_students_table():
     try:
         conn = get_connection()
@@ -42,20 +44,8 @@ def create_students_table():
     except Exception as e:
         print(f"❌ Failed to create students table: {e}")
 
-def test_connection():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT VERSION();")
-        version = cursor.fetchone()[0]
-        print(f"✅ Connected to MySQL Server, Version: {version}")
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-
+# Run this only when directly executed
 def init_database():
-    test_connection()
     create_students_table()
 
 if __name__ == "__main__":
