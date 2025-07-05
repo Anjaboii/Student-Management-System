@@ -40,7 +40,7 @@ def get_db_config():
         print(f"🔗 Using DATABASE_URL: {parsed.hostname}:{parsed.port}")
         return {
             'host': parsed.hostname,
-            'port': parsed.port or 3306,
+            'port': parsed.port or 29443,
             'database': parsed.path.lstrip('/'),
             'user': parsed.username,
             'password': parsed.password,
@@ -48,7 +48,7 @@ def get_db_config():
         }
 
     host = mysql_host or 'localhost'
-    port = int(mysql_port) if mysql_port else 3306
+    port = int(mysql_port) if mysql_port else 29443
     database = mysql_database or 'students'
     user = mysql_user or 'root'
     password = mysql_password or ''

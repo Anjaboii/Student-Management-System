@@ -1,6 +1,7 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from dotenv import load_dotenv
 from student_model import (
     get_all_students,
     get_student_by_id,
@@ -8,9 +9,9 @@ from student_model import (
     update_student,
     delete_student
 )
-
+load_dotenv()
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
+app.secret_key = os.getenv('SECRET_KEY', 'f40f9a50df41e080ee1cc6b08c9e9842c038ddd8f391281d86d762fff87c21a1')
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 @app.route('/')
