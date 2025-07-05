@@ -33,6 +33,14 @@ def handle_preflight():
         response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
         return response
 
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://studentmanagement-1.netlify.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 @app.route('/')
 def home():
     return "🎓 Student Management API is running!"
@@ -85,4 +93,8 @@ def search_students():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    host = '0.0.0.0'  # Railway needs this
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    app.run(debug=debug, host=host, port=port)
