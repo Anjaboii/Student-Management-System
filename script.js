@@ -1,5 +1,5 @@
-// FIXED: Correct API base URL - removed the extra /students
-const API_BASE_URL = 'https://studentmanagement-1.up.railway.app/api';
+// Use your local Flask backend URL here
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
 let editingStudentId = null;
 let searchTimeout = null;
 
@@ -9,29 +9,25 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSearch();
 });
 
-// NEW: Setup search functionality
+// Setup search functionality
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     
-    // Real-time search as user types
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
         const query = this.value.trim();
         
         if (query.length === 0) {
-            // If search is empty, show all students
             loadStudents();
             hideSearchInfo();
             return;
         }
         
-        // Debounce search to avoid too many API calls
         searchTimeout = setTimeout(() => {
             searchStudents(query);
         }, 300);
     });
     
-    // Search on Enter key
     searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const query = this.value.trim();
@@ -42,7 +38,6 @@ function setupSearch() {
     });
 }
 
-// NEW: Search students function
 function searchStudents(query) {
     fetch(`${API_BASE_URL}/students/search?q=${encodeURIComponent(query)}`)
     .then(response => response.json())
@@ -51,7 +46,6 @@ function searchStudents(query) {
             showMessage('Search error: ' + data.error, 'error');
             return;
         }
-        
         displayStudents(data.students);
         showSearchInfo(data.total, data.query);
     })
@@ -60,31 +54,23 @@ function searchStudents(query) {
     });
 }
 
-// NEW: Show search results info
 function showSearchInfo(total, query) {
     const searchInfo = document.getElementById('searchInfo');
     searchInfo.style.display = 'block';
-    searchInfo.innerHTML = `
-        <div class="search-results">
-            Found <strong>${total}</strong> student${total !== 1 ? 's' : ''} matching "<strong>${query}</strong>"
-        </div>
-    `;
+    searchInfo.innerHTML = `Found <strong>${total}</strong> student${total !== 1 ? 's' : ''} matching "<strong>${query}</strong>"`;
 }
 
-// NEW: Hide search info
 function hideSearchInfo() {
     const searchInfo = document.getElementById('searchInfo');
     searchInfo.style.display = 'none';
 }
 
-// NEW: Clear search function
 function clearSearch() {
     document.getElementById('searchInput').value = '';
     hideSearchInfo();
     loadStudents();
 }
 
-// Handle form submission
 document.getElementById('studentForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -99,20 +85,20 @@ document.getElementById('studentForm').addEventListener('submit', function(e) {
     }
 });
 
-// Add new student
 function addStudent(studentData) {
     fetch(`${API_BASE_URL}/students`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(studentData)
     })
     .then(response => response.json())
     .then(data => {
+        if (data.error) {
+            showMessage('Error adding student: ' + data.error, 'error');
+            return;
+        }
         showMessage('Student added successfully!', 'success');
         clearForm();
-        // Refresh current view (search or all students)
         const searchQuery = document.getElementById('searchInput').value.trim();
         if (searchQuery) {
             searchStudents(searchQuery);
@@ -125,7 +111,6 @@ function addStudent(studentData) {
     });
 }
 
-// Load all students
 function loadStudents() {
     fetch(`${API_BASE_URL}/students`)
     .then(response => response.json())
@@ -134,28 +119,18 @@ function loadStudents() {
     })
     .catch(error => {
         showMessage('Error loading students: ' + error.message, 'error');
-        document.getElementById('studentsContainer').innerHTML = 
-            '<div class="error">Failed to load students</div>';
+        document.getElementById('studentsContainer').innerHTML = '<div class="error">Failed to load students</div>';
     });
 }
 
-// Display students
 function displayStudents(students) {
     const container = document.getElementById('studentsContainer');
     
-    if (students.length === 0) {
+    if (!students || students.length === 0) {
         const searchQuery = document.getElementById('searchInput').value.trim();
         const emptyMessage = searchQuery ? 
-            `<div class="empty-state">
-                <h3>No students found</h3>
-                <p>No students match your search for "<strong>${searchQuery}</strong>"</p>
-                <button class="btn" onclick="clearSearch()">Show All Students</button>
-            </div>` :
-            `<div class="empty-state">
-                <h3>No students found</h3>
-                <p>Add your first student using the form above!</p>
-            </div>`;
-        
+            `<div class="empty-state"><h3>No students found</h3><p>No students match your search for "<strong>${searchQuery}</strong>"</p><button class="btn" onclick="clearSearch()">Show All Students</button></div>` :
+            `<div class="empty-state"><h3>No students found</h3><p>Add your first student using the form above!</p></div>`;
         container.innerHTML = emptyMessage;
         return;
     }
@@ -178,11 +153,14 @@ function displayStudents(students) {
     container.innerHTML = `<div class="students-grid">${studentsHTML}</div>`;
 }
 
-// Edit student
 function editStudent(id) {
     fetch(`${API_BASE_URL}/students/${id}`)
     .then(response => response.json())
     .then(student => {
+        if (student.error) {
+            showMessage('Error loading student: ' + student.error, 'error');
+            return;
+        }
         document.getElementById('name').value = student.name;
         document.getElementById('age').value = student.age;
         document.getElementById('grade').value = student.grade;
@@ -196,20 +174,20 @@ function editStudent(id) {
     });
 }
 
-// Update student
 function updateStudent(id, studentData) {
     fetch(`${API_BASE_URL}/students/${id}`, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(studentData)
     })
     .then(response => response.json())
     .then(data => {
+        if (data.error) {
+            showMessage('Error updating student: ' + data.error, 'error');
+            return;
+        }
         showMessage('Student updated successfully!', 'success');
         clearForm();
-        // Refresh current view (search or all students)
         const searchQuery = document.getElementById('searchInput').value.trim();
         if (searchQuery) {
             searchStudents(searchQuery);
@@ -222,7 +200,6 @@ function updateStudent(id, studentData) {
     });
 }
 
-// Delete student
 function deleteStudent(id) {
     if (confirm('Are you sure you want to delete this student?')) {
         fetch(`${API_BASE_URL}/students/${id}`, {
@@ -230,8 +207,11 @@ function deleteStudent(id) {
         })
         .then(response => response.json())
         .then(data => {
+            if (data.error) {
+                showMessage('Error deleting student: ' + data.error, 'error');
+                return;
+            }
             showMessage('Student deleted successfully!', 'success');
-            // Refresh current view (search or all students)
             const searchQuery = document.getElementById('searchInput').value.trim();
             if (searchQuery) {
                 searchStudents(searchQuery);
@@ -245,7 +225,6 @@ function deleteStudent(id) {
     }
 }
 
-// Clear form
 function clearForm() {
     document.getElementById('studentForm').reset();
     editingStudentId = null;
@@ -253,12 +232,10 @@ function clearForm() {
     document.querySelector('button[type="submit"]').textContent = 'Add Student';
 }
 
-// Show message
 function showMessage(message, type) {
     const messageDiv = document.getElementById('message');
     messageDiv.innerHTML = `<div class="message ${type}">${message}</div>`;
     
-    // Clear message after 3 seconds
     setTimeout(() => {
         messageDiv.innerHTML = '';
     }, 3000);

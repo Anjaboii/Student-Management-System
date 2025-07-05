@@ -4,10 +4,8 @@ from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import Error, pooling
 
-# Load environment variables
 load_dotenv()
 
-# Connection pool configuration
 pool_config = {
     'pool_name': 'student_pool',
     'pool_size': 10,
@@ -18,19 +16,15 @@ pool_config = {
     'time_zone': '+00:00'
 }
 
-# Database configuration
 def get_db_config():
-    """Get database configuration from environment variables"""
-    
-    # Try Railway's standard MySQL environment variables first
-    mysql_host = os.environ.get('MYSQL_HOST')
-    mysql_port = os.environ.get('MYSQL_PORT')
-    mysql_database = os.environ.get('MYSQL_DATABASE')
-    mysql_user = os.environ.get('MYSQL_USER')
-    mysql_password = os.environ.get('MYSQL_PASSWORD')
-    
+    mysql_host = os.environ.get('MYSQL_HOST') or os.environ.get('MYSQLHOST')
+    mysql_port = os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT')
+    mysql_database = os.environ.get('MYSQL_DATABASE') or os.environ.get('MYSQLDATABASE')
+    mysql_user = os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER')
+    mysql_password = os.environ.get('MYSQL_PASSWORD') or os.environ.get('MYSQLPASSWORD')
+
     if all([mysql_host, mysql_port, mysql_database, mysql_user, mysql_password]):
-        print(f"🔗 Using Railway MySQL variables: {mysql_host}:{mysql_port}")
+        print(f"🔗 Using MySQL variables: {mysql_host}:{mysql_port}")
         return {
             'host': mysql_host,
             'port': int(mysql_port),
@@ -39,11 +33,9 @@ def get_db_config():
             'password': mysql_password,
             **pool_config
         }
-    
-    # Try to use DATABASE_URL (Railway's preferred method)
+
     database_url = os.environ.get('DATABASE_URL')
     if database_url:
-        # Parse DATABASE_URL
         parsed = urllib.parse.urlparse(database_url)
         print(f"🔗 Using DATABASE_URL: {parsed.hostname}:{parsed.port}")
         return {
@@ -54,15 +46,15 @@ def get_db_config():
             'password': parsed.password,
             **pool_config
         }
-    
-    # Fallback to individual environment variables (your current .env variables)
-    host = os.environ.get('MYSQLHOST', 'localhost')
-    port = int(os.environ.get('MYSQLPORT', 3306))
-    database = os.environ.get('MYSQLDATABASE', 'railway')
-    user = os.environ.get('MYSQLUSER', 'root')
-    password = os.environ.get('MYSQLPASSWORD', '')
-    
-    print(f"🔗 Using fallback variables: {host}:{port}")
+
+    host = mysql_host or 'localhost'
+    port = int(mysql_port) if mysql_port else 3306
+    database = mysql_database or 'students'
+    user = mysql_user or 'root'
+    password = mysql_password or ''
+
+    print(f"🔗 Using fallback variables: {host}:{port} database: {database}")
+
     return {
         'host': host,
         'port': port,
@@ -72,11 +64,9 @@ def get_db_config():
         **pool_config
     }
 
-# Initialize connection pool
 connection_pool = None
 
 def init_connection_pool():
-    """Initialize MySQL connection pool"""
     global connection_pool
     try:
         config = get_db_config()
@@ -89,14 +79,10 @@ def init_connection_pool():
         return False
 
 def get_connection():
-    """Get database connection from pool"""
     global connection_pool
-    
-    # Initialize pool if not exists
     if connection_pool is None:
         if not init_connection_pool():
             raise Exception("Failed to initialize database connection pool")
-    
     try:
         connection = connection_pool.get_connection()
         if connection.is_connected():
@@ -108,18 +94,15 @@ def get_connection():
         raise Exception(f"Database connection error: {e}")
 
 def execute_query(query, params=None, fetch=False):
-    """Execute a query with proper connection handling"""
     connection = None
     cursor = None
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
-        
         if params:
             cursor.execute(query, params)
         else:
             cursor.execute(query)
-        
         if fetch:
             if fetch == 'one':
                 result = cursor.fetchone()
@@ -129,7 +112,6 @@ def execute_query(query, params=None, fetch=False):
         else:
             connection.commit()
             return cursor.rowcount
-            
     except Error as e:
         if connection:
             connection.rollback()
@@ -140,67 +122,3 @@ def execute_query(query, params=None, fetch=False):
             cursor.close()
         if connection:
             connection.close()
-
-def create_tables():
-    """Create necessary tables"""
-    try:
-        # Students table
-        students_table = """
-        CREATE TABLE IF NOT EXISTS students (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            age INT NOT NULL CHECK (age > 0 AND age < 150),
-            grade VARCHAR(50) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_name (name),
-            INDEX idx_grade (grade)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-        """
-        
-        execute_query(students_table)
-        print("✅ Students table created successfully")
-        
-    except Exception as e:
-        print(f"❌ Failed to create tables: {e}")
-        raise
-
-def test_connection():
-    """Test database connection"""
-    try:
-        connection = get_connection()
-        cursor = connection.cursor()
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
-        cursor.close()
-        connection.close()
-        
-        if result:
-            print("✅ Database connection test successful")
-            return True
-        else:
-            print("❌ Database connection test failed")
-            return False
-    except Exception as e:
-        print(f"❌ Database connection test error: {e}")
-        return False
-
-# Initialize database on import
-def init_database():
-    """Initialize database with tables"""
-    try:
-        print("🔄 Initializing database...")
-        if test_connection():
-            create_tables()
-            print("✅ Database initialized successfully")
-        else:
-            print("❌ Database initialization failed - connection test failed")
-    except Exception as e:
-        print(f"❌ Database initialization error: {e}")
-
-# Run initialization when module is imported
-if __name__ == "__main__":
-    init_database()
-else:
-    # Initialize pool when imported
-    init_connection_pool()
