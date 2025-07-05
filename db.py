@@ -22,11 +22,30 @@ pool_config = {
 def get_db_config():
     """Get database configuration from environment variables"""
     
-    # Try to use DATABASE_URL first (Railway's preferred method)
+    # Try Railway's standard MySQL environment variables first
+    mysql_host = os.environ.get('MYSQL_HOST')
+    mysql_port = os.environ.get('MYSQL_PORT')
+    mysql_database = os.environ.get('MYSQL_DATABASE')
+    mysql_user = os.environ.get('MYSQL_USER')
+    mysql_password = os.environ.get('MYSQL_PASSWORD')
+    
+    if all([mysql_host, mysql_port, mysql_database, mysql_user, mysql_password]):
+        print(f"🔗 Using Railway MySQL variables: {mysql_host}:{mysql_port}")
+        return {
+            'host': mysql_host,
+            'port': int(mysql_port),
+            'database': mysql_database,
+            'user': mysql_user,
+            'password': mysql_password,
+            **pool_config
+        }
+    
+    # Try to use DATABASE_URL (Railway's preferred method)
     database_url = os.environ.get('DATABASE_URL')
     if database_url:
         # Parse DATABASE_URL
         parsed = urllib.parse.urlparse(database_url)
+        print(f"🔗 Using DATABASE_URL: {parsed.hostname}:{parsed.port}")
         return {
             'host': parsed.hostname,
             'port': parsed.port or 3306,
@@ -36,13 +55,20 @@ def get_db_config():
             **pool_config
         }
     
-    # Fallback to individual environment variables
+    # Fallback to individual environment variables (your current .env variables)
+    host = os.environ.get('MYSQLHOST', 'localhost')
+    port = int(os.environ.get('MYSQLPORT', 3306))
+    database = os.environ.get('MYSQLDATABASE', 'railway')
+    user = os.environ.get('MYSQLUSER', 'root')
+    password = os.environ.get('MYSQLPASSWORD', '')
+    
+    print(f"🔗 Using fallback variables: {host}:{port}")
     return {
-        'host': os.environ.get('MYSQLHOST', 'localhost'),
-        'port': int(os.environ.get('MYSQLPORT', 3306)),
-        'database': os.environ.get('MYSQLDATABASE', 'railway'),
-        'user': os.environ.get('MYSQLUSER', 'root'),
-        'password': os.environ.get('MYSQLPASSWORD', ''),
+        'host': host,
+        'port': port,
+        'database': database,
+        'user': user,
+        'password': password,
         **pool_config
     }
 

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 from db import get_connection
@@ -15,6 +16,11 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
+
+# Enable CORS for all routes
+CORS(app)
+
+# ==================== HTML ROUTES ====================
 
 @app.route('/')
 def index():
@@ -164,29 +170,208 @@ def delete_student_route(student_id):
         flash(f'Database error: {e}', 'error')
         return redirect(url_for('students'))
 
-@app.route('/api/students')
-def api_students():
-    """API endpoint for students data"""
+# ==================== API ROUTES ====================
+
+@app.route('/api/students', methods=['GET'])
+def api_get_students():
+    """API: Get all students"""
     try:
         students_data = get_all_students()
+        return jsonify(students_data)
+    
+    except Exception as e:
         return jsonify({
-            'success': True,
-            'data': students_data,
-            'count': len(students_data)
+            'error': str(e)
+        }), 500
+
+@app.route('/api/students', methods=['POST'])
+def api_add_student():
+    """API: Add new student"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'error': 'No data provided'
+            }), 400
+        
+        name = data.get('name', '').strip()
+        age = data.get('age')
+        grade = data.get('grade', '').strip()
+        
+        # Validation
+        if not name or not age or not grade:
+            return jsonify({
+                'error': 'All fields (name, age, grade) are required'
+            }), 400
+        
+        try:
+            age = int(age)
+            if age < 1 or age > 100:
+                return jsonify({
+                    'error': 'Age must be between 1 and 100'
+                }), 400
+        except (ValueError, TypeError):
+            return jsonify({
+                'error': 'Age must be a valid number'
+            }), 400
+        
+        student_data = {
+            'name': name,
+            'age': age,
+            'grade': grade
+        }
+        
+        student_id = add_student(student_data)
+        
+        return jsonify({
+            'message': 'Student added successfully',
+            'student_id': student_id
+        }), 201
+    
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+@app.route('/api/students/<int:student_id>', methods=['GET'])
+def api_get_student(student_id):
+    """API: Get student by ID"""
+    try:
+        student = get_student_by_id(student_id)
+        
+        if not student:
+            return jsonify({
+                'error': 'Student not found'
+            }), 404
+        
+        return jsonify(student)
+    
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+@app.route('/api/students/<int:student_id>', methods=['PUT'])
+def api_update_student(student_id):
+    """API: Update student"""
+    try:
+        # Check if student exists
+        student = get_student_by_id(student_id)
+        if not student:
+            return jsonify({
+                'error': 'Student not found'
+            }), 404
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'error': 'No data provided'
+            }), 400
+        
+        name = data.get('name', '').strip()
+        age = data.get('age')
+        grade = data.get('grade', '').strip()
+        
+        # Validation
+        if not name or not age or not grade:
+            return jsonify({
+                'error': 'All fields (name, age, grade) are required'
+            }), 400
+        
+        try:
+            age = int(age)
+            if age < 1 or age > 100:
+                return jsonify({
+                    'error': 'Age must be between 1 and 100'
+                }), 400
+        except (ValueError, TypeError):
+            return jsonify({
+                'error': 'Age must be a valid number'
+            }), 400
+        
+        update_student(student_id, name, age, grade)
+        
+        return jsonify({
+            'message': 'Student updated successfully'
         })
     
     except Exception as e:
         return jsonify({
-            'success': False,
             'error': str(e)
         }), 500
 
+@app.route('/api/students/<int:student_id>', methods=['DELETE'])
+def api_delete_student(student_id):
+    """API: Delete student"""
+    try:
+        # Check if student exists
+        student = get_student_by_id(student_id)
+        if not student:
+            return jsonify({
+                'error': 'Student not found'
+            }), 404
+        
+        delete_student(student_id)
+        
+        return jsonify({
+            'message': 'Student deleted successfully'
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+@app.route('/api/students/search', methods=['GET'])
+def api_search_students():
+    """API: Search students"""
+    try:
+        query = request.args.get('q', '').strip()
+        
+        if not query:
+            return jsonify({
+                'error': 'Search query is required'
+            }), 400
+        
+        # Get all students and filter
+        all_students = get_all_students()
+        
+        # Simple search by name or grade
+        matching_students = []
+        for student in all_students:
+            if (query.lower() in student['name'].lower() or 
+                query.lower() in student['grade'].lower()):
+                matching_students.append(student)
+        
+        return jsonify({
+            'students': matching_students,
+            'total': len(matching_students),
+            'query': query
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+# ==================== ERROR HANDLERS ====================
+
 @app.errorhandler(404)
 def page_not_found(e):
+    if request.path.startswith('/api/'):
+        return jsonify({
+            'error': 'API endpoint not found'
+        }), 404
     return render_template('error.html'), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
+    if request.path.startswith('/api/'):
+        return jsonify({
+            'error': 'Internal server error'
+        }), 500
     return render_template('error.html'), 500
 
 if __name__ == '__main__':
