@@ -25,3 +25,16 @@ def delete_student(student_id):
     query = "DELETE FROM students WHERE id=%s"
     params = (student_id,)
     return execute_query(query, params)
+
+
+def search_students(query):
+    """Search students by name, grade, or ID"""
+    search_query = """
+    SELECT id, name, age, grade 
+    FROM students 
+    WHERE name LIKE %s OR grade LIKE %s OR id LIKE %s
+    ORDER BY name
+    """
+    search_term = f"%{query}%"
+    params = (search_term, search_term, search_term)
+    return execute_query(search_query, params, fetch=True)

@@ -7,7 +7,8 @@ from student_model import (
     get_student_by_id,
     add_student,
     update_student,
-    delete_student
+    delete_student,
+    search_students
 )
 load_dotenv()
 app = Flask(__name__)
@@ -74,6 +75,23 @@ def api_delete_student(student_id):
             return jsonify({'message': 'Student deleted successfully'})
         else:
             return jsonify({'error': 'Student not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/students/search', methods=['GET'])
+def api_search_students():
+    try:
+        query = request.args.get('q', '').strip()
+        if not query:
+            return jsonify({'students': [], 'total': 0, 'query': query})
+        
+        students = search_students(query)
+        return jsonify({
+            'students': students,
+            'total': len(students),
+            'query': query
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
